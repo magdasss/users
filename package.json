@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "dependencies": {
+    "body-parser": "*",
     "express": "*",
     "memory-cache": "^0.2.0",
     "mongoose": "*",
