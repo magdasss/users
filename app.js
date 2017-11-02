@@ -16,9 +16,13 @@ var db = mongoose.connection;
 
 app.get('/api/users', (req, res) => {
 	User.getPersons((err, persons) => {
-		if(err){
-			throw err;
+		try{
+			console.log('show');
 		}
+		catch(err){
+			console.log('error: ' + err);
+		}
+		
 		res.json(persons);
 	});
 });
@@ -26,8 +30,11 @@ app.get('/api/users', (req, res) => {
 app.post('/api/users', (req, res) => {
 	var user = req.body;
 	User.addUser(user, (err, user) => {
-		if(err){
-			throw err;
+		try{
+			console.log('add');
+		}
+		catch(err){
+			console.log('error: ' + err);
 		}
 		res.json(user);
 	});
