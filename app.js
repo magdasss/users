@@ -29,6 +29,8 @@ app.get('/api/user', usToken, (req, res)=> {
           console.log('error!');
         } else {
           res.json(persons);
+           message: 'Show user';
+          console.log('Show all users');
         }
       });
     }           
@@ -45,7 +47,9 @@ app.post('/api/user', usToken,(req, res) => {
     if (err) {
       console.log('error!');
     } else {
-    res.json(user);}
+    res.json(user);
+    message: 'Add user';
+    console.log('Add user');}
   });
 }
 });
@@ -59,6 +63,8 @@ app.get('/api/user/:id',usToken, function (req, res) {
   var id = req.params.id;
   User.findOne({"_id": ObjectId(id)}, function(err, doc) {
      res.json(doc);
+      message: 'Show user';
+    console.log('Show user id' + ObjectId(id));
   });
 }
    });
