@@ -1,65 +1,81 @@
-const express = require('express');
-const app = express();
-
-const bodyParser = require('body-parser');
+var express = require('express');
+var bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-
-
+const app = express();
 app.use(bodyParser.json());
-
-
 User =require('./models/user');
+var jwt = require('jsonwebtoken');
 
 mongoose.connect('mongodb://localhost/users');
 var db = mongoose.connection;
+var ObjectId = require('mongoose').Types.ObjectId;
 
-
-app.get('/api/users', (req, res) => {
-	User.getPersons((err, persons) => {
-		try{
-			console.log('show');
-		}
-		catch(err){
-			console.log('error: ' + err);
-		}
-		
-		res.json(persons);
-	});
+app.post('/api/login', (req,res) =>{
+  const user = { id: 3 };
+  const token = jwt.sign({ user: user.id }, 'secret_key');
+  res.json({
+    message: 'Use this token!',
+    token: token
+  });
 });
 
-app.post('/api/users', (req, res) => {
-	var user = req.body;
-	User.addUser(user, (err, user) => {
-		try{
-			console.log('add');
-		}
-		catch(err){
-			console.log('error: ' + err);
-		}
-		res.json(user);
-	});
+app.get('/api/user', usToken, (req, res)=> {
+  jwt.verify(req.token, 'secret_key', function(err, data) {
+    if (err) {
+      res.sendStatus(403);
+    } else {
+      User.getPersons((err, persons) => {
+        if (err) {
+          console.log('error!');
+        } else {
+          res.json(persons);
+        }
+      });
+    }           
+  });
 });
 
+app.post('/api/user', usToken,(req, res) => {
+  jwt.verify(req.token, 'secret_key', function(err, data) {
+     if (err) {
+      res.sendStatus(403);
+    } else {
+  var user = req.body;
+  User.addUser(user, (err, user) => {
+    if (err) {
+      console.log('error!');
+    } else {
+    res.json(user);}
+  });
+}
+});
+});
 
-app.listen(3000);
-console.log('Port 3000');
+app.get('/api/user/:id',usToken, function (req, res) {
+   jwt.verify(req.token, 'secret_key', function(err, data) {
+     if (err) {
+      res.sendStatus(403);
+    } else {
+  var id = req.params.id;
+  User.findOne({"_id": ObjectId(id)}, function(err, doc) {
+     res.json(doc);
+  });
+}
+   });
+});
 
+function usToken(req, res, next) {
+  const bearerHeader = req.headers["authorization"];
+  if (typeof bearerHeader !== 'undefined') {
+    const bearer = bearerHeader.split(" ");
+    const bearerToken = bearer[1];
+    req.token = bearerToken;
+    next();
+  } else {
+    res.sendStatus(403);
+  }
+}
 
-
-var cache = require('memory-cache');
-
-cache.put('Cache', 'disappear', 100, function(key, value) {
-    console.log(key + ' did ' + value);
-}); 
-
-setTimeout(function() {
-    console.log('Cache is ' + cache.get('cache'));
-}, 3000);
- 
-var newCache = new cache.Cache();
- 
-newCache.put('foo', 'start');
- 
-setTimeout(function() {
-  console.log('New cache ' + newCache.get('foo'));
-}, 3000);
+app.listen(3000, function () {
+  console.log('Port 3000');
+});
