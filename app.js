@@ -5,10 +5,28 @@ const app = express();
 app.use(bodyParser.json());
 User =require('./models/user');
 var jwt = require('jsonwebtoken');
-
 mongoose.connect('mongodb://localhost/users');
 var db = mongoose.connection;
 var ObjectId = require('mongoose').Types.ObjectId;
+var mcache = require('memory-cache');
+
+var cache = (duration) => {
+  return (req, res, next) => {
+    let key = 'express' + req.originalUrl || req.url
+    let cachedBody = mcache.get(key)
+    if (cachedBody) {
+      res.send(cachedBody)
+      return
+    } else {
+      res.sendResponse = res.send
+      res.send = (body) => {
+        mcache.put(key, body, duration * 1000);
+        res.sendResponse(body)
+      }
+      next()
+    }
+  }
+}
 
 app.post('/api/login', (req,res) =>{
   const user = { id: 3 };
@@ -19,7 +37,8 @@ app.post('/api/login', (req,res) =>{
   });
 });
 
-app.get('/api/user', usToken, (req, res)=> {
+app.get('/api/user', usToken,cache(10), (req, res)=> {
+   setTimeout(() => {
   jwt.verify(req.token, 'secret_key', function(err, data) {
     if (err) {
       res.sendStatus(403);
@@ -35,9 +54,10 @@ app.get('/api/user', usToken, (req, res)=> {
       });
     }           
   });
+   }, 3000)
 });
 
-app.post('/api/user', usToken,(req, res) => {
+app.post('/api/user', usToken,  (req, res) => {
   jwt.verify(req.token, 'secret_key', function(err, data) {
      if (err) {
       res.sendStatus(403);
@@ -55,7 +75,8 @@ app.post('/api/user', usToken,(req, res) => {
 });
 });
 
-app.get('/api/user/:id',usToken, function (req, res) {
+app.get('/api/user/:id',usToken,cache(10), function (req, res) {
+   setTimeout(() => {
    jwt.verify(req.token, 'secret_key', function(err, data) {
      if (err) {
       res.sendStatus(403);
@@ -67,7 +88,8 @@ app.get('/api/user/:id',usToken, function (req, res) {
     console.log('Show user id' + ObjectId(id));
   });
 }
-   });
+});
+}, 3000)
 });
 
 function usToken(req, res, next) {
