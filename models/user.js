@@ -16,7 +16,7 @@ const userSchema = mongoose.Schema({
 	email:{
 		type: mongoose.SchemaTypes.Email
 	},
-		phone: {
+	phone: {
         type: String,
         required: true,
         validate: {
