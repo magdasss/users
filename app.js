@@ -2,42 +2,44 @@ var express = require('express');
 var bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const app = express();
-app.use(bodyParser.json());
-User =require('./models/user');
 var jwt = require('jsonwebtoken');
-mongoose.connect('mongodb://localhost/users');
 var db = mongoose.connection;
 var ObjectId = require('mongoose').Types.ObjectId;
 var mcache = require('memory-cache');
+mongoose.connect('mongodb://localhost/users');
+app.use(bodyParser.json());
+User =require('./models/user');
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
 
 var cache = (duration) => {
   return (req, res, next) => {
-    let key = 'express' + req.originalUrl || req.url
-    let cachedBody = mcache.get(key)
+    let key = 'express' + req.originalUrl || req.url;
+    let cachedBody = mcache.get(key);
     if (cachedBody) {
-      res.send(cachedBody)
-      return
+      res.send(cachedBody);
+      return;
     } else {
       res.sendResponse = res.send
       res.send = (body) => {
         mcache.put(key, body, duration * 1000);
-        res.sendResponse(body)
+        res.sendResponse(body);
       }
-      next()
+      next();
     }
   }
 }
 
 app.post('/api/login', (req,res) =>{
-  const user = { id: 3 };
-  const token = jwt.sign({ user: user.id }, 'secret_key');
+  const user = {id: 3};
+  const token = jwt.sign({user: user.id}, 'secret_key');
   res.json({
     message: 'Use this token!',
     token: token
   });
 });
 
-app.get('/api/user', usToken,cache(10), (req, res)=> {
+app.get('/api/user', usToken, cache(10), (req, res)=> {
    setTimeout(() => {
   jwt.verify(req.token, 'secret_key', function(err, data) {
     if (err) {
@@ -45,10 +47,9 @@ app.get('/api/user', usToken,cache(10), (req, res)=> {
     } else {
       User.getPersons((err, persons) => {
         if (err) {
-          console.log('error!');
+          console.log('error!' + err);
         } else {
           res.json(persons);
-           message: 'Show user';
           console.log('Show all users');
         }
       });
@@ -63,19 +64,21 @@ app.post('/api/user', usToken,  (req, res) => {
       res.sendStatus(403);
     } else {
   var user = req.body;
+  console.log(user);
   User.addUser(user, (err, user) => {
     if (err) {
-      console.log('error!');
+      console.log('error!' + err);
     } else {
     res.json(user);
     message: 'Add user';
-    console.log('Add user');}
+    console.log('Add user');
+  }
   });
 }
 });
 });
 
-app.get('/api/user/:id',usToken,cache(10), function (req, res) {
+app.get('/api/user/:id',usToken, cache(10), function (req, res) {
    setTimeout(() => {
    jwt.verify(req.token, 'secret_key', function(err, data) {
      if (err) {
