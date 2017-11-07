@@ -55,7 +55,7 @@ app.get('/api/user', usToken, cache(10), (req, res)=> {
       });
     }           
   });
-   }, 3000)
+   }, 500)
 });
 
 app.post('/api/user', usToken,  (req, res) => {
@@ -92,7 +92,7 @@ app.get('/api/user/:id',usToken, cache(10), function (req, res) {
   });
 }
 });
-}, 3000)
+}, 500)
 });
 
 function usToken(req, res, next) {
